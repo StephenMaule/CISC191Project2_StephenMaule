@@ -32,8 +32,6 @@ import java.util.Random;
 // Paths have entitys
 public class Path
 {
-	// Path has a random path choice generation
-	private Random random = new Random(); // Randomizor object
 	// Path has path choices
 	private Entity[] pathChoices = new Entity[3]; // Array of path options
 
@@ -44,6 +42,7 @@ public class Path
 	 */
 	Path(int difficulty)
 	{
+		Random random = new Random(); // Randomizor object
 		// Creates 3 paths
 		for (int i = 0; i < 3; i++)
 		{

@@ -23,7 +23,7 @@ import java.util.Scanner;
  *         <<add more references here>>
  *         https://www.w3resource.com/java-tutorial/file-input-and-output.php
  * 
- *         Version/date: 5/1/2023
+ *         Version/date:5/15/2023
  *         yes
  *         Responsibilities of class:
  *         Main class and method: Displays current room, saves game to file,
@@ -37,6 +37,7 @@ public class main
 	{
 		// initialize map object and input
 		Map map = new Map();
+		map.display();
 		Scanner SystemIn = new Scanner(System.in);
 		// Promt for past save loading
 		System.out.println("Would you like to load a save? yes/no");
@@ -67,6 +68,7 @@ public class main
 			{
 				System.out.println("Unable to save game.");
 			}
+			
 		}
 
 		// Finish the Game

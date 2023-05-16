@@ -1,9 +1,19 @@
 package DungeonGame;
 
 import java.util.Scanner;
+
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
+
 import java.io.PrintWriter;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -28,7 +38,7 @@ import java.util.Random;
  *         <<add more references here>>
  *         https://stackoverflow.com/questions/5585779/how-do-i-convert-a-string-to-an-int-in-java
  * 
- *         Version/date: 5/1/2023
+ *         Version/date: 5/15/2023
  * 
  *         Responsibilities of class:
  *         keep track of combat and defence. Keep track of movement and paths
@@ -37,8 +47,6 @@ import java.util.Random;
 // Map has a player and a path
 public class Map
 {
-	// Map Has a input
-	Scanner userInput = new Scanner(System.in); // input object
 	// Map Has a player
 	private Player currentPlayer; // Player object
 	// Map Has a path
@@ -56,6 +64,42 @@ public class Map
 		generateNextFloor();
 	}
 
+	/**
+	 * Displays UI
+	 */
+	public void display() {
+		//Over All UI object
+		JComponent ui = null; 
+		//Over All Frame
+		JFrame frame = new JFrame("DUNGEON GAME!"); 
+		//Set UI to a border layout with intsets
+		ui = new JPanel(new BorderLayout(4,4));
+		ui.setBorder(new EmptyBorder(4,4,4,4)); 
+		//Initialize Top and Bottom Grid layout objects
+		JPanel topGrid = new JPanel(new GridLayout(1,1,10,10));
+		JPanel bottomGrid = new JPanel(new GridLayout(1,1,10,10));
+		// Add a Border between the two grids
+		topGrid.setBorder(new EmptyBorder(25,0,0,0));
+		//Initialize and fill text area for top grid
+		JTextArea screen = new JTextArea();
+		screen.setText("MAP DISPLAY AREA");
+		screen.setEditable(false);
+		topGrid.add(screen);
+		ui.add(topGrid, BorderLayout.NORTH);
+		//Initialize and fill text area for Bottom grid
+		JTextArea screenTwo = new JTextArea();
+		screenTwo.setText("INTERACTION AREA");
+		screenTwo.setEditable(false);
+		bottomGrid.add(screenTwo);
+		ui.add(bottomGrid, BorderLayout.SOUTH);
+		//Finish Set up of Frame object and add the ui as contentPane
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(500, 500);
+		frame.setContentPane(ui);
+		//Set Visible
+		frame.setVisible(true);
+	}
+	
 	/**
 	 * Generates new Random floor
 	 */
@@ -90,7 +134,6 @@ public class Map
 			if (loser.contains(currentPlayer.ID))
 			{
 				System.out.println("Game Over!");
-				userInput.close();
 				System.exit(0);
 			}
 		}
@@ -108,6 +151,7 @@ public class Map
 	 */
 	private void itemInteraction(Item item)
 	{
+		Scanner userInput = new Scanner(System.in); // input object
 		// Communicate item information
 		System.out.println("You Found >" + item.getName() + "<");
 		System.out.println("Would you like to pick it up Yes ? No");
@@ -137,6 +181,7 @@ public class Map
 	 */
 	private String combatSystem(Enemy enemy)
 	{
+		Scanner userInput = new Scanner(System.in); // input object
 		Random random = new Random(); // Randomizor object
 		boolean turnOrder = true; // Turn order, True = Player, False = Enemy
 		String nextLine = "";
@@ -238,7 +283,7 @@ public class Map
 	public boolean roundPlayerInput()
 	{
 		String input = ""; // player input data
-
+		Scanner userInput = new Scanner(System.in); // input object
 		// Player input value
 		System.out.println(
 				"Would you like to exit the dungeon? (>exit< to exit)");
@@ -266,6 +311,8 @@ public class Map
 			case "right":
 				pathOutcome(currentPath.getPaths()[2]);
 				break;
+			default:
+				input = userInput.next();
 		}
 		// increases current level
 		gameLevel++;
@@ -280,6 +327,7 @@ public class Map
 	 */
 	public boolean doSave()
 	{
+		Scanner userInput = new Scanner(System.in); // input object
 		// Promt user for save
 		System.out.println("Would you like to save your game? yes/no");
 		String input = userInput.next();
@@ -289,15 +337,12 @@ public class Map
 			case "yes":
 				// Increase game level for next start
 				gameLevel++;
-				userInput.close();
 				return true;
 			case "no":
-				userInput.close();
 				return false;
 			default:
 				input = userInput.next();
 		}
-		userInput.close();
 		return false;
 	}
 
@@ -317,6 +362,10 @@ public class Map
 	public void saveGame() throws IOException
 	{
 		PrintWriter save = null;
+		File sanityCheck = new File("save.txt");
+		if(!sanityCheck.exists()) {
+			throw new IOException();
+		}
 		try
 		{
 			// save all relevant data in order
@@ -331,7 +380,7 @@ public class Map
 		}
 		catch (IOException e)
 		{
-			System.out.println("Game save error, exiting...");
+			System.out.println("Game save error...");
 		}
 		finally
 		{
@@ -355,15 +404,12 @@ public class Map
 		} // Catch error and handle
 		catch (IOException e)
 		{
-			userInput.close();
-			System.out.println("save.txt" + " Not Found.");
-			System.exit(0);
+			System.out.println("save.txt Not Found... Starting new Game. ");
+			return;
 		}
 		// try to grab data from file and populate variables
 		try
 		{
-			// if (fileIn.hasNextLine())
-			// {
 			gameLevel = Integer.parseInt(fileIn.next());
 			scalingDamage = Integer.parseInt(fileIn.next());
 			playerStartItem.setName(fileIn.next());
@@ -371,17 +417,23 @@ public class Map
 			int hp = Integer.parseInt(fileIn.next());
 			int level = Integer.parseInt(fileIn.next());
 			currentPlayer = new Player(hp, level, playerStartItem);
-			fileIn.close();
-			// }
 		}
 		// Catch error and handle
 		catch (NumberFormatException e)
 		{
-			System.out.println("File Read Error. " + e);
-			userInput.close();
-			System.exit(0);
+			System.out.println("File Read Error... Starting new Game.");
+			gameLevel = 0;
+			scalingDamage = 1;
+			currentPlayer = new Player(5, 1, new Item());
 		}
-		// close resources
+		catch(NoSuchElementException e) {
+			System.out.println("File Read Error... Starting new Game.");
+			gameLevel = 0;
+			scalingDamage = 1;
+			currentPlayer = new Player(5, 1, new Item());
+		}
+		finally {
+			fileIn.close();
+		}
 	}
-
 }
