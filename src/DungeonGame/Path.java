@@ -22,7 +22,7 @@ import java.util.Random;
  * 
  *         <<add more references here>>
  * 
- *         Version/date: 5/1/2023
+ *         Version/date: 5/22/2023
  * 
  *         Responsibilities of class:
  *         Generate new rooms, Fill paths with loot enemy or empty, create and
@@ -74,14 +74,15 @@ public class Path
 	/**
 	 * Prints dynamic map based on spawned entities using a 2 dimentional array
 	 */
-	public void printMap()
+	public String printMap()
 	{
 		// Constants for different map resources
-		String enemy = "   #   ";
-		String loot = "   *   ";
-		String player = "   ^   ";
+		String enemy = "        #       ";
+		String loot = "        *       ";
+		String player = "        ^       ";
 		String wall = "0000000";
-		String air = "       ";
+		String air = "                 ";
+		String map = "";
 		// Empty map structure
 		String[][] mapArt = { { wall, air, wall }, { wall, air, wall },
 				{ wall, air, wall }, { wall, air, wall }, { wall, air, wall },
@@ -100,41 +101,50 @@ public class Path
 				{
 					if (pathChoices[1].ID.contains("Enemy"))
 					{
-						System.out.print(enemy);
+						// System.out.print(enemy);
+						map += enemy;
 					}
 					else
 					{
-						System.out.print(loot);
+						// System.out.print(loot);
+						map += loot;
 					}
 				}
 				else if (row == 10 && column == 0)
 				{
 					if (pathChoices[0].ID.contains("Enemy"))
 					{
-						System.out.print(enemy);
+						// System.out.print(enemy);
+						map += enemy;
 					}
 					else
 					{
-						System.out.print(loot);
+						// System.out.print(loot);
+						map += loot;
 					}
 				}
 				else if (row == 10 && column == 2)
 				{
 					if (pathChoices[2].ID.contains("Enemy"))
 					{
-						System.out.print(enemy);
+						// System.out.print(enemy);
+						map += enemy;
 					}
 					else
 					{
-						System.out.print(loot);
+						// System.out.print(loot);
+						map += loot;
 					}
 				}
 				else
 				{
-					System.out.print(mapArt[row][column]);
+					// System.out.print(mapArt[row][column]);
+					map += mapArt[row][column];
 				}
 			}
-			System.out.println();
+			// System.out.println();
+			map += "\n";
 		}
+		return map;
 	}
 }
