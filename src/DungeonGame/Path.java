@@ -1,7 +1,9 @@
 package DungeonGame;
 
+import java.util.HashMap;
 // Used for randomizing loot and enemies
 import java.util.Random;
+import java.util.Stack;
 
 /**
  * Lead Author(s):
@@ -22,7 +24,7 @@ import java.util.Random;
  * 
  *         <<add more references here>>
  * 
- *         Version/date: 5/22/2023
+ *         Version/date: 5/27/2023
  * 
  *         Responsibilities of class:
  *         Generate new rooms, Fill paths with loot enemy or empty, create and
@@ -33,7 +35,11 @@ import java.util.Random;
 public class Path
 {
 	// Path has path choices
-	private Entity[] pathChoices = new Entity[3]; // Array of path options
+	private HashMap<Integer, Entity> pathChoices = new HashMap<Integer, Entity>(); // Hash
+																					// Map
+																					// of
+																					// path
+																					// options
 
 	/**
 	 * Constructor for the level path
@@ -51,12 +57,14 @@ public class Path
 			if (randOption == true)
 			{
 				// if random is true set path direction to enemy
-				pathChoices[i] = new Enemy(difficulty);
+				// pathChoices[i] = new Enemy(difficulty);
+				pathChoices.put(i, new Enemy(difficulty));
 			}
 			else
 			{
 				// if random is false set path direction to item
-				pathChoices[i] = new Item(difficulty);
+				// pathChoices[i] = new Item(difficulty);
+				pathChoices.put(i, new Item(difficulty));
 			}
 		}
 	};
@@ -66,7 +74,7 @@ public class Path
 	 * 
 	 * @return Array of Entities
 	 */
-	public Entity[] getPaths()
+	public HashMap<Integer, Entity> getPaths()
 	{
 		return pathChoices;
 	}
@@ -99,7 +107,7 @@ public class Path
 			{
 				if (row == 3 && column == 1)
 				{
-					if (pathChoices[1].ID.contains("Enemy"))
+					if (pathChoices.get(1).ID.contains("Enemy"))
 					{
 						// System.out.print(enemy);
 						map += enemy;
@@ -112,7 +120,7 @@ public class Path
 				}
 				else if (row == 10 && column == 0)
 				{
-					if (pathChoices[0].ID.contains("Enemy"))
+					if (pathChoices.get(0).ID.contains("Enemy"))
 					{
 						// System.out.print(enemy);
 						map += enemy;
@@ -125,7 +133,7 @@ public class Path
 				}
 				else if (row == 10 && column == 2)
 				{
-					if (pathChoices[2].ID.contains("Enemy"))
+					if (pathChoices.get(2).ID.contains("Enemy"))
 					{
 						// System.out.print(enemy);
 						map += enemy;

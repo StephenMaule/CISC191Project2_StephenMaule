@@ -19,7 +19,7 @@ package DungeonGame;
  * 
  *         <<add more references here>>
  * 
- *         Version/date: 5/1/2023
+ *         Version/date: 5/27/2023
  * 
  *         Responsibilities of class:
  *         store held item, health information level information. Promt

@@ -1,11 +1,8 @@
 package DungeonGame;
 
 import java.awt.BorderLayout;
-
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -14,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 
 /**
  * Lead Author(s):
@@ -34,7 +32,7 @@ import javax.swing.JTextArea;
  * 
  *         <<add more references here>>
  * 
- *         Version/date: 5/22/2023
+ *         Version/date: 5/27/2023
  * 
  *         Responsibilities of class:
  *         Display and manage GUI object / Components
@@ -43,7 +41,6 @@ import javax.swing.JTextArea;
 public class Display extends JFrame implements ActionListener
 {
 	// Display JPanel Sections
-	private JPanel stats = new JPanel();
 	private JPanel actions = new JPanel();
 	private JPanel displays = new JPanel();
 	private JPanel systemInteractions = new JPanel();
@@ -51,7 +48,7 @@ public class Display extends JFrame implements ActionListener
 	private JPanel combatInteractions = new JPanel();
 	private JPanel pathInteractions = new JPanel();
 	// Display Has Text areas
-	private JTextArea mapDisplay = new JTextArea(22, 22);
+	private JTextPane mapDisplay = new JTextPane();
 	private JTextArea console = new JTextArea();
 	private JTextArea playerStats = new JTextArea(3, 3);
 	private JTextArea enemyStats = new JTextArea(3, 3);
@@ -65,7 +62,6 @@ public class Display extends JFrame implements ActionListener
 	private JButton defend = new JButton("Defend");
 	private JButton pickUp = new JButton("Pick Up");
 	private JButton discard = new JButton("Discard");
-	private Insets margin = new Insets(0, 0, 0, 0);
 	// Display has mapAccess
 	private Map mapAccess;
 
@@ -81,11 +77,10 @@ public class Display extends JFrame implements ActionListener
 		combatInteractions.setLayout(new GridLayout(2, 1, 0, 0));
 		pathInteractions.setLayout(new GridLayout(3, 1, 0, 0));
 		// Init Text Area values
-		mapDisplay.setLineWrap(true);
 		mapDisplay.setEditable(false);
 		mapDisplay.setSize(300, 300);
-		playerStats.setSize(50, 300);
-		enemyStats.setSize(50, 300);
+		playerStats.setSize(75, 300);
+		enemyStats.setSize(75, 300);
 		console.setSize(450, 15);
 		console.setLineWrap(true);
 		console.setEditable(false);
@@ -212,9 +207,18 @@ public class Display extends JFrame implements ActionListener
 	 * 
 	 * @param newHealth
 	 */
-	public void updatePlayer(int newHealth)
+	public void updatePlayer(int newHealth, boolean defended)
 	{
-		playerStats.setText("Player" + "\n" + "Health:  " + newHealth);
+		if (defended)
+		{
+			playerStats.setText("Player" + "\n" + "Health:   " + "\n"
+					+ newHealth + "\n" + "Defended!");
+		}
+		else
+		{
+			playerStats
+					.setText("Player" + "\n" + "Health:   " + "\n" + newHealth);
+		}
 	}
 
 	/**
@@ -222,8 +226,17 @@ public class Display extends JFrame implements ActionListener
 	 * 
 	 * @param newHealth
 	 */
-	public void updateEnemy(int newHealth)
+	public void updateEnemy(int newHealth, boolean defended)
 	{
-		enemyStats.setText("Enemy" + "\n" + "Health:  " + newHealth);
+		if (defended)
+		{
+			enemyStats.setText("Enemy" + "\n" + "Health:   " + "\n" + newHealth
+					+ "\n" + "Defended!");
+		}
+		else
+		{
+			enemyStats
+					.setText("Enemy" + "\n" + "Health:   " + "\n" + newHealth);
+		}
 	}
 }

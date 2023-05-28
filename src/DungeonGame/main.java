@@ -25,11 +25,10 @@ import javax.swing.JFrame;
  *         <<add more references here>>
  *         https://www.w3resource.com/java-tutorial/file-input-and-output.php
  * 
- *         Version/date: 5/22/2023
+ *         Version/date: 5/27/2023
  * 
  *         Responsibilities of class:
- *         Main class and method: Displays current room, saves game to file,
- *         reads input for game based info like saving or quitting
+ *         Main class and method: tracks and runs repeating rounds until game over
  */
 
 public class main

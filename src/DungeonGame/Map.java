@@ -1,17 +1,8 @@
 package DungeonGame;
 
 import java.util.Scanner;
-
-import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.border.EmptyBorder;
-
 import java.io.PrintWriter;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -39,13 +30,14 @@ import java.util.Random;
  *         <<add more references here>>
  *         https://stackoverflow.com/questions/5585779/how-do-i-convert-a-string-to-an-int-in-java
  * 
- *         Version/date: 5/22/2023
+ *         Version/date: 5/27/2023
  * 
  *         Responsibilities of class:
- *         keep track of combat and defence. Keep track of movement and paths
+ *         keep track of combat and defence. Keep track of movement and paths,
+ *         Keep track of button triggers
  */
 
-// Map has a player and a path
+// Map has a player, a path, and a display
 public class Map
 {
 	// Map Has a player
@@ -58,7 +50,7 @@ public class Map
 	// Map has Triggers for each state
 	private boolean attack = false, defend = false, left = false, right = false,
 			straight = false, pickUpItem = false, discardItem = false,
-			load = false, canCombat = false, canInteract = false,
+			loadBlock = false, canCombat = false, canInteract = false,
 			canMove = false, turnOrder = true;
 	// Map Has a display
 	Display screen = new Display(this);
@@ -71,6 +63,7 @@ public class Map
 
 		currentPlayer = new Player();
 		generateNextFloor();
+		// Init Over all Jframe options
 		screen.setSize(500, 500);
 		screen.setTitle("DUNGEON GAME!");
 		screen.setResizable(false);
@@ -78,9 +71,9 @@ public class Map
 		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// Promt for past save loading
 		screen.updateConsole(
-				"Press Load to Load A Save! Press Discard to Start A New Game!");
-		screen.updatePlayer(currentPlayer.getHP());
-		screen.updateEnemy(0);
+				"Press Load to Load A Save! Press A Move Option to Start A New Game!");
+		screen.updatePlayer(currentPlayer.getHP(), currentPlayer.defended());
+		screen.updateEnemy(0, false);
 	}
 
 	/**
@@ -103,15 +96,19 @@ public class Map
 	 */
 	private void pathOutcome(Entity pathOutcome)
 	{
-
+		// If the path is an enemy, open combat buttons and cycle turns until
+		// either player or enemy is dead
 		if (pathOutcome.ID.contains("Enemy"))
 		{
 			canCombat = true;
+			screen.updateConsole("Player Turn: Attack ? Defend ");
 			while (!combatSystem((Enemy) pathOutcome))
 			{
 			}
 			canCombat = false;
 		}
+		// If the path is an item then run the item interaction for Picking up
+		// or discarding
 		if (pathOutcome.ID.contains("Item"))
 		{
 			itemInteraction((Item) pathOutcome);// Cast because we know it is an
@@ -126,19 +123,20 @@ public class Map
 	 */
 	private void itemInteraction(Item item)
 	{
-		// Communicate item information
+		// Communicate item information and Promt user to drop or pick up
 		screen.updateConsole("You Found >" + item.getName() + "<"
 				+ " Would you like to pick it up?");
-		// Promt user to drop or pick up
+		// Open item interaction buttons
 		canInteract = true;
-		// If the player should be able to Interact with item
 		while (pickUpItem == false && discardItem == false)
 		{
+			// if player chooses to pick up item
 			if (pickUpItem == true)
 			{
 				currentPlayer.swapWeapon(item);
 				screen.updateConsole("You Picked up >" + item.getName() + "<!");
 			}
+			// if player chooses to discard item
 			else if (discardItem == true)
 			{
 				screen.updateConsole("Dropping...");
@@ -149,8 +147,10 @@ public class Map
 						+ " Would you like to pick it up?");
 			}
 		}
+		// reset buttons
 		discardItem = false;
 		pickUpItem = false;
+		// Close item interaction
 		canInteract = false;
 	}
 
@@ -164,105 +164,93 @@ public class Map
 	private boolean combatSystem(Enemy enemy)
 	{
 		Random random = new Random(); // Randomizor object
-
-		if (turnOrder)
-		{ // If it is the players turn
-			screen.updateConsole("Player Turn: Attack ? Defend ");
-			do
+		// Update player and enemy stats for begining of round
+		screen.updateEnemy(enemy.getHealth(), enemy.defended());
+		screen.updatePlayer(currentPlayer.getHP(), currentPlayer.defended());
+		if (turnOrder) // Player turn
+		{
+			canCombat = true; // Enable player input
+			while (canCombat) // Loop until successful player input
 			{
-				if (attack == true)
-				{ // When Attacking attempt to attack, if enemy is defending
-					// it is blocked, otherwise deal damage
-					if (currentPlayer.defended())
-					{
-						currentPlayer.defend();
-					}
-					screen.updateConsole("Player Attacks!");
-					if (!enemy.defended())
+				screen.updateConsole("Player Turn: Attack ? Defend "); // Promt
+																		// user
+				if (attack) // Attack button
+				{
+					if (!enemy.defended()) // If the enemy cant block deal
+											// damage
 					{
 						enemy.updateHP(-currentPlayer.attack());
-						screen.updateConsole(
-								currentPlayer.getHeldWeapon().getDamage()
-										+ " Damage! " + enemy.getHealth()
-										+ " Remaining! ");
-						screen.updateConsole(
-								"Player Attack" + enemy.getHealth());
+						screen.updateEnemy(enemy.getHealth(), enemy.defended());
 					}
-					else
+					if (currentPlayer.defended())// if the player defended on
+													// their last turn, end
+													// their defence
 					{
-						screen.updateConsole("Blocked!");
-						if (enemy.defended())
-						{
-							enemy.defend();
-						}
-						screen.updateConsole(
-								"Player atack but defend" + enemy.getHealth());
+						currentPlayer.defend();
+						screen.updatePlayer(currentPlayer.getHP(),
+								currentPlayer.defended());
 					}
-					attack = false;
-					turnOrder = false;
+					attack = false; // Reset Attack button
+					canCombat = false; // Break out of waiting for button
 				}
-				if (defend == true && !currentPlayer.defended())
-				{ // If Defending and is not already defended then defend
-					screen.updateConsole("Player Defends!");
-					currentPlayer.defend();
-					defend = false;
-					turnOrder = false;
-					screen.updateConsole("Player Defend" + enemy.getHealth());
-				}
-			} while (attack == false && defend == false
-					&& (defend == true || currentPlayer.defended()));
-		}
-		else
-		{
-			screen.updateConsole("Enemy Turn!");
-			boolean randOption = random.nextBoolean();
-			if (randOption == false && enemy.defended() == false)
-			{ // If Defending and is not already defended then defend
-				screen.updateConsole("Enemy Defends!");
-				enemy.defend();
-				turnOrder = true;
-			}
-			if (randOption == true)
-			{// When Attacking attempt to attack, if player is defending it
-				// is blocked, otherwise deal damage
-				if (enemy.defended())
+				else if (defend) // Defend button
 				{
-					enemy.defend();
+					if (!currentPlayer.defended()) // If player isnt already
+													// defended then defend
+					{
+						currentPlayer.defend();
+						screen.updatePlayer(currentPlayer.getHP(),
+								currentPlayer.defended());
+						canCombat = false;// Break out of waiting for button
+					}
+					defend = false;
 				}
-				if (!currentPlayer.defended())
+			}
+			turnOrder = false; // Switch to enemy
+		}
+		else // Enemy Turn
+		{
+			boolean randOption = random.nextBoolean(); // True == Intent to
+														// attack, False ==
+														// Intent to defend
+			if (!enemy.defended() && !randOption)// intent to defend
+			{
+				enemy.defend();
+			}
+			else // If Intent to attack or cant defend
+			{
+				if (!currentPlayer.defended()) // deal damage if the player cant
+												// block
 				{
 					currentPlayer.updateHP(-enemy.attack());
-					screen.updateConsole("Enemy Attacks! "
-							+ enemy.getWeapon().getDamage() + " Damage! "
-							+ currentPlayer.getHP() + " Remaining! ");
+					screen.updatePlayer(currentPlayer.getHP(),
+							currentPlayer.defended());
 				}
-				else
+				if (enemy.defended()) // if the enemy defended last turn then
+										// let them next time
 				{
-					screen.updateConsole("Blocked!");
+					enemy.defend();
+					screen.updateEnemy(enemy.getHealth(), enemy.defended());
 				}
-				if (currentPlayer.defended())
-				{
-					currentPlayer.defend();
-				}
-				turnOrder = true;
 			}
 
+			turnOrder = true; // Switch to player turn
 		}
 
 		if (enemy.getHealth() <= 0)
 		{ // If enemy HP is below 0 enemy is dead
 			screen.updateConsole(enemy.ID + " Has been Defeated");
-			screen.updateConsole("Enemy loose" + enemy.getHealth());
-			screen.updatePlayer(currentPlayer.getHP());
-			screen.updateEnemy(enemy.getHealth());
-			return true;
+			screen.updatePlayer(currentPlayer.getHP(),
+					currentPlayer.defended());
+			screen.updateEnemy(0, false);
+			return true; // end combat loop
 		}
 		else if (currentPlayer.getHP() <= 0)
 		{// If player HP is below 0 player is dead
-			screen.updateConsole(currentPlayer.ID
-					+ " Has been Defeated! Game Over!" + "Close to exit.");
-			screen.updatePlayer(currentPlayer.getHP());
-			screen.updateEnemy(enemy.getHealth());
+			screen.updateConsole("Game Over! " + currentPlayer.ID
+					+ " Has been Defeated!" + " Close to exit.");
+			screen.updatePlayer(0, currentPlayer.defended());
+			screen.updateEnemy(enemy.getHealth(), false);
 			while (true)
 			{
 				// Loop until player closes
@@ -270,7 +258,7 @@ public class Map
 		}
 		else
 		{
-			return false;
+			return false; // continue combat loop
 		}
 	}
 
@@ -279,44 +267,55 @@ public class Map
 	 */
 	public boolean roundPlayerInput()
 	{
-		//Update Health value 
-		screen.updatePlayer(currentPlayer.getHP());
-		// Prompt Movement
-		screen.updateConsole(
-				"Level " + gameLevel + "! Which Path do you want to go down?");
+		// Update Health value
+		screen.updatePlayer(currentPlayer.getHP(), currentPlayer.defended());
 		// print out dynamic map
 		screen.updateMap(currentPath.printMap());
+		// Open Movement buttons
 		canMove = true;
 		// wait for path decision if the player should be able to move
 		while (canMove)
 		{
 			if (left)
 			{
-				pathOutcome(currentPath.getPaths()[0]);
-				left = false;
-				canMove = false;
+				left = false;// reset all path buttons to false
+				right = false;
+				straight = false;
+				loadBlock = true; // If player gives input stop allowing to load
+									// game
+				canMove = false;// Stop accepting Movement input
+				pathOutcome(currentPath.getPaths().get(0));
 			}
 			else if (straight)
 			{
-				pathOutcome(currentPath.getPaths()[1]);
+				left = false;// reset all path buttons to false
+				right = false;
 				straight = false;
-				canMove = false;
+				loadBlock = true; // If player gives input stop allowing to load
+									// game
+				canMove = false;// Stop accepting Movement input
+				pathOutcome(currentPath.getPaths().get(1));
 			}
 			else if (right)
 			{
-				pathOutcome(currentPath.getPaths()[2]);
+				left = false; // reset all path buttons to false
 				right = false;
-				canMove = false;
+				straight = false;
+				loadBlock = true; // If player gives input stop allowing to load
+									// game
+				canMove = false; // Stop accepting Movement input
+				pathOutcome(currentPath.getPaths().get(2));
 			}
 			else
 			{
-				screen.updateConsole("Level " + gameLevel
-						+ "! Which Path do you want to go down?");
+				screen.updatePlayer(currentPlayer.getHP(),
+						currentPlayer.defended());
 			}
 		}
 		// increases current level
 		gameLevel++;
-		screen.updateConsole("Next Level: " + gameLevel + "!");
+		screen.updateConsole(
+				"Level " + gameLevel + "! Which Path do you want to go down?");
 		// generate next floor
 		generateNextFloor();
 		return true;
@@ -371,7 +370,7 @@ public class Map
 	public void loadGame()
 	{
 		// If the player should be able to load
-		if (load == false)
+		if (!loadBlock) // True = cant load, false == can load
 		{
 			// File Objects and scanners
 			Scanner fileIn = null;
@@ -379,8 +378,6 @@ public class Map
 			// try to open file
 			try
 			{
-				screen.updateConsole(
-						"Attempting to load " + "save.txt" + "...");
 				fileIn = new Scanner(new File("save.txt"));
 			} // Catch error and handle
 			catch (IOException e)
@@ -398,7 +395,7 @@ public class Map
 				playerStartItem.setDamage(Integer.parseInt(fileIn.next()));
 				int hp = Integer.parseInt(fileIn.next());
 				int level = Integer.parseInt(fileIn.next());
-				currentPlayer = new Player(hp, level, playerStartItem);
+				currentPlayer = new Player(level, hp, playerStartItem);
 			}
 			// Catch error and handle
 			catch (NumberFormatException e)
@@ -406,20 +403,23 @@ public class Map
 				screen.updateConsole("File Read Error... Starting new Game.");
 				gameLevel = 0;
 				scalingDamage = 1;
-				currentPlayer = new Player(5, 1, new Item());
+				currentPlayer = new Player(1, 5, new Item());
 			}
 			catch (NoSuchElementException e)
 			{
 				screen.updateConsole("File Read Error... Starting new Game.");
 				gameLevel = 0;
 				scalingDamage = 1;
-				currentPlayer = new Player(5, 1, new Item());
+				currentPlayer = new Player(1, 5, new Item());
 			}
 			finally
 			{
 				fileIn.close();
-				screen.updatePlayer(currentPlayer.getHP());
-				load = true;
+				screen.updatePlayer(currentPlayer.getHP(),
+						currentPlayer.defended());
+				screen.updateEnemy(0, false);
+				screen.updateConsole("Starting at Level " + gameLevel + "!");
+				loadBlock = true;
 			}
 		}
 	}
@@ -431,6 +431,7 @@ public class Map
 	{
 		if (canCombat)
 		{
+
 			attack = true;
 		}
 	}
@@ -440,7 +441,7 @@ public class Map
 	 */
 	public void defend()
 	{
-		if (!defend && canCombat)
+		if (canCombat)
 		{
 			defend = true;
 		}
